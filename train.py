@@ -3,6 +3,7 @@ import collections
 
 from models import *
 from tools import *
+from lossfunc import *
 
 from torchvision.utils import make_grid
 import torch.nn.functional as F
@@ -34,23 +35,8 @@ class Trainer():
 
         self.train_loader = train_loader
         self.valid_loader = valid_loader
+        
         """
-        l_train = []
-        for _, labels in self.train_loader:
-            l_train += list(labels.numpy())
-        count_train = collections.Counter(l_train)
-        
-
-        l_valid = []
-        for _, labels in self.valid_loader:
-            l_valid += list(labels.numpy())
-        count_valid = collections.Counter(l_valid)
-        count_total = collections.Counter(l_train + l_valid)
-        
-        print('train_data: ', count_train)
-        print('valid_data: ', count_valid)
-        print('total_data: ', count_total)
-        
         self.show_batch()
         """
     def show_batch(self):
@@ -78,9 +64,7 @@ class Trainer():
         loss_list = []
         for batch_num, batch in enumerate(self.train_loader, 0):
             batch_data, batch_labels = batch
-            F = torch.mean(batch_data, dim=(2,3)).squeeze() >= -0.8
-            batch_data = batch_data[F]
-            batch_labels = batch_labels[F]
+            batch_labels_1hot = F.one_hot(batch_labels, num_classes=7)
 
             self.loss_step(batch_data.to(DEVICE), batch_labels.to(DEVICE))
             loss_list.append(self.loss.item())
@@ -94,7 +78,7 @@ class Trainer():
 
         for batch in self.valid_loader:
             batch_data, batch_labels = batch
-
+            
             outputs = self.net(batch_data.to(DEVICE))
             loss = self.compute_loss(outputs, batch_labels.to(DEVICE))
             acc  = self.accuracy(outputs, batch_labels.to(DEVICE))
@@ -114,7 +98,8 @@ class Trainer():
         self.opt.step()
 
     def compute_loss(self, outputs, labels):
-        loss = F.cross_entropy(outputs, labels)
+        loss = cross_entropy(outputs, labels)
+        #loss = F.cross_entropy(outputs, labels)
         return loss
 
     def accuracy(self, outputs, labels):

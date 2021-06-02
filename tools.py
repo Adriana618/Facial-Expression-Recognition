@@ -66,17 +66,27 @@ def get_FEDdataset(batch_size):
         6: 'Neutral'
     }
 
-    df_train = pd.concat([
-        df[df.Usage == 'Training'],
-        df[df.Usage == 'PublicTest']],
-        ignore_index = True).drop(['Usage'], axis=1)
+    #df_train = pd.concat([
+    #    df[df.Usage == 'Training'],
+    #    df[df.Usage == 'PublicTest']],
+    #    ignore_index = True).drop(['Usage'], axis=1)
 
+    df_train  = df[
+        df.Usage == 'Training'].drop([
+                    'Usage'], axis=1).reset_index().drop(['index'], 1)
+
+    df_valid  = df[
+        df.Usage == 'PublicTest'].drop([
+                    'Usage'], axis=1).reset_index().drop(['index'], 1)
     df_test  = df[
         df.Usage == 'PrivateTest'].drop([
                     'Usage'], axis=1).reset_index().drop(['index'], 1)
         
     train_images = df_train.iloc[:,1]
     train_labels = df_train.iloc[:,0]
+    valid_images = df_valid.iloc[:,1]
+    valid_labels = df_valid.iloc[:,0]
+
     test_images = df_test.iloc[:,1]
     test_labels = df_test.iloc[:,0]
 
@@ -91,7 +101,7 @@ def get_FEDdataset(batch_size):
         ]
     )
 
-    test_transform = transforms.Compose(
+    eval_transform = transforms.Compose(
         [
             transforms.ToPILImage(),
             transforms.Grayscale(num_output_channels=1),
@@ -101,14 +111,19 @@ def get_FEDdataset(batch_size):
     )
 
     train_data = FERDataset(train_images, train_labels, train_transform)
-    test_data = FERDataset(test_images, test_labels, test_transform)
+    valid_data = FERDataset(valid_images, valid_labels, eval_transform)
+    test_data = FERDataset(test_images, test_labels, eval_transform)
 
     train_loader = DataLoader(
-        train_data, batch_size, shuffle=True, num_workers=4, pin_memory=True
+        train_data, batch_size, shuffle=True, num_workers=2, pin_memory=True
+    )
+
+    valid_loader = DataLoader(
+        valid_data, batch_size, num_workers=2, pin_memory=True
     )
 
     test_loader = DataLoader(
-        test_data, batch_size, num_workers=4, pin_memory=True 
+        test_data, batch_size, num_workers=2, pin_memory=True 
     )
 
-    return (train_loader, test_loader, classes)
+    return (train_loader, valid_loader, test_loader, classes)
