@@ -1,5 +1,8 @@
 import torch
 import collections
+import glob
+import os
+import re
 
 from models import *
 from tools import *
@@ -14,7 +17,7 @@ class Trainer():
     def __init__(
         self, 
         batch_size = 64, 
-        epochs     = 1000, 
+        epochs     = 200, 
         lr         = 5e-3, 
         input_dim  = 1,
         hid_dim    = 32, 
@@ -29,13 +32,15 @@ class Trainer():
             self.net.parameters(), lr=lr
         )
         self.epochs = epochs
-        self.ep_train_str = "epoch {:4d}:\ttrain_loss={:.3f}"
+        self.ep_train_str = "epoch {:4d}: train_loss={:.3f}"
         self.ep_valid_str = ", valid_loss={:.3f}, valid_acc={:.3f}"
-        train_loader, valid_loader, clases = get_FEDdataset(batch_size)
+        train_loader, valid_loader, *rest = get_FEDdataset(batch_size)
 
         self.train_loader = train_loader
         self.valid_loader = valid_loader
         
+        self.save_step = 10
+        self.checkpoints_path = './models'
         """
         self.show_batch()
         """
@@ -54,9 +59,20 @@ class Trainer():
             break
     
     def train(self):
-        for ep in range(1, self.epochs + 1):
+        chs = glob.glob(os.path.join(self.checkpoints_path, '*.pth'))
+        if len(chs) == 0: ep_start = 1
+        else:
+            eps = [int(re.search('model-(.+?).pth', ch).group(1)) for ch in chs]
+            ep_start = sorted(eps)[-1]
+            self.load(ep_start)
+            ep_start += 1
+
+        for ep in range(ep_start, self.epochs + 1):
             self.train_step(ep)
             self.valid_step()
+
+            if ep % self.save_step == 0:
+                self.save(ep)
 
     def train_step(self, ep):
         self.net.train()
@@ -105,6 +121,36 @@ class Trainer():
     def accuracy(self, outputs, labels):
         _, preds = torch.max(outputs, dim=1)
         return torch.tensor(torch.sum(preds==labels).item()/len(preds))
+
+    def save(self, ep):
+        print('Model saved at epoch {:d}... '.format(ep), end='')
+
+        file_model = 'model-{:d}.pth'.format(ep)
+
+        if not os.path.exists(self.checkpoints_path):
+            os.makedirs(self.checkpoints_path)
+
+        save_path  = os.path.join(self.checkpoints_path, file_model)
+		
+        checkpoint = {}
+
+        checkpoint['model_sd'] = self.net.state_dict()   
+        checkpoint['optimizer_sd']  = self.opt.state_dict()
+
+        torch.save(checkpoint, save_path)
+        print("Done.")
+
+    def load(self, ep):
+        print('Model Loaded at epoch ...'.format(ep), end='')
+        file_model = 'model-{:d}.pth'.format(ep)
+
+        load_path  = os.path.join(self.checkpoints_path, file_model)
+        checkpoint = torch.load(load_path)
+
+        self.net.load_state_dict(checkpoint['model_sd'])
+        self.opt.load_state_dict(checkpoint['optimizer_sd'])
+
+        print("Done.")
 
 if __name__ == '__main__':
     trainer = Trainer()

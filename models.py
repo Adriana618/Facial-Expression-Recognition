@@ -79,4 +79,3 @@ class BaseModel(nn.Module):
         x = self.fc(x)
 
         return x
-
