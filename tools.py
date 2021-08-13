@@ -38,21 +38,6 @@ class FERDataset(Dataset):
 
         return (data, label)
 
-class MyRotationTransform:
-    """
-        transforms.Compose(
-            ...
-            MyRotationTransform(angles=[0, 90, 180, 270 ]),
-            ...
-        )
-    """
-    def __init__(self, angles):
-        self.angles = angles
-
-    def __call__(self, x):
-        angle = random.choice(self.angles)
-        return TF.rotate(x, angle)
-
 def get_FEDdataset(batch_size):
     df = pd.read_csv('dataset/fer2013.csv')
         
@@ -97,7 +82,7 @@ def get_FEDdataset(batch_size):
             transforms.RandomCrop(48, padding=4, padding_mode='reflect'),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
-            transforms.Normalize((0.5), (0.5), inplace=True)
+            transforms.Normalize((0.5), (0.5), inplace=True),
         ]
     )
 
