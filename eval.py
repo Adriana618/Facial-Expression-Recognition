@@ -22,7 +22,7 @@ class Eval():
         c_num      = 7,
     ):
 
-        self.net = BaseModel(input_dim, hid_dim, c_num)
+        self.net = ResNet9(input_dim, hid_dim, c_num)
         self.net.to(DEVICE)
 
         self.ep_eval_str = "test_acc={:.3f}"

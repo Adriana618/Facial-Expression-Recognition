@@ -3,3 +3,5 @@ archive.zip
 dataset/
 foo.py
 models/
+models_past_model/
+data/

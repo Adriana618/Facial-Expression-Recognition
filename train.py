@@ -14,7 +14,7 @@ import torch.nn.functional as F
 
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-from torchsummary import summary
+from pytorch_model_summary import summary
 
 class Trainer():
     def __init__(
@@ -37,7 +37,7 @@ class Trainer():
 
         self.net = ResNet9(input_dim, hid_dim, c_num)
 
-        summary(self.net, (1, 48, 48))
+        #summary(self.net, (1, 48, 48))
 
         self.net.to(DEVICE)
         #self.net.apply(init_weights)
@@ -120,10 +120,13 @@ class Trainer():
 
         loss_list = []
         for batch_num, batch in enumerate(self.train_loader, 0):
-            batch_data, batch_labels = batch
+            anchor_img, positive_img, negative_img, batch_labels = batch
+            anchor_img = anchor_img.to(DEVICE)
+            positive_img = positive_img.to(DEVICE)
+            negative_img = negative_img.to(DEVICE)
             batch_labels_1hot = F.one_hot(batch_labels, num_classes=7)
 
-            self.optimize_step(batch_data.to(DEVICE), batch_labels.to(DEVICE))
+            self.optimize_step(anchor_img, positive_img, negative_img, batch_labels.to(DEVICE))
             loss_list.append(self.loss.item())
 
         return np.mean(loss_list)
@@ -145,7 +148,7 @@ class Trainer():
             batch_data, batch_labels = batch
             
             outputs = self.net(batch_data.to(DEVICE))
-            loss = self.compute_loss(outputs, batch_labels.to(DEVICE))
+            loss = self.compute_loss_normal(outputs, batch_labels.to(DEVICE))
             acc  = self.compute_accuracy(outputs, batch_labels.to(DEVICE))
 
             loss_it.append(loss.item())
@@ -153,7 +156,7 @@ class Trainer():
         
         return np.mean(loss_it), np.mean(acc_it)
 
-    def optimize_step(self, inputs, labels):
+    def optimize_step(self, a_i, p_i, n_i, labels):
         """
         Optimization
 
@@ -161,14 +164,16 @@ class Trainer():
             inputs: a tensor that contains the batch of images
             labels: a tensor that contains the batch of labels
         """
-        outputs = self.net(inputs)
-        self.loss = self.compute_loss(outputs, labels)
+        output_a = self.net(a_i)
+        output_p = self.net(p_i)
+        output_n = self.net(n_i)
+        self.loss = self.compute_loss(output_a, output_p, output_n, labels)
         
         self.opt.zero_grad()
         self.loss.backward()
         self.opt.step()
 
-    def compute_loss(self, outputs, labels):
+    def compute_loss(self, o_a, o_p, o_n, labels):
         """
         Optimization
 
@@ -176,9 +181,15 @@ class Trainer():
             outputs: a tensor that contains the batch of logits (model's output)
             labels : a tensor that contains the batch of labels
         """
-        loss = F.cross_entropy(outputs, labels)
+        triplet_loss = nn.TripletMarginLoss(margin=1.0, p=2)
+
+        loss = triplet_loss(o_a, o_p, o_n)
         #loss = cross_entropy(outputs, labels)
         
+        return loss
+
+    def compute_loss_normal(self, outputs, labels):
+        loss = F.cross_entropy(outputs, labels)
         return loss
 
     def compute_accuracy(self, outputs, labels):

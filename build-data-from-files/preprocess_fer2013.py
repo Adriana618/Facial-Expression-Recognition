@@ -13,7 +13,7 @@ PublicTest_y = []
 PrivateTest_x = []
 PrivateTest_y = []
 
-datapath = os.path.join('data','data.h5')
+datapath = os.path.join('data','fer2013.h5')
 if not os.path.exists(os.path.dirname(datapath)):
     os.makedirs(os.path.dirname(datapath))
 
