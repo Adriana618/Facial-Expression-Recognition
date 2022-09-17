@@ -4,3 +4,4 @@ dataset/
 foo.py
 *.pth
 data/
+*.png
