@@ -2,7 +2,6 @@ import torch
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import random
 from torchvision import transforms, utils
 from torch.utils.data import Dataset, DataLoader, random_split
 import torchvision.transforms.functional as TF
@@ -38,7 +37,7 @@ class FERDataset(Dataset):
 
         return (data, label)
 
-def get_FEDdataset(batch_size):
+def get_dataset(batch_size):
     df = pd.read_csv('dataset/fer2013.csv')
         
     classes = {
@@ -50,11 +49,6 @@ def get_FEDdataset(batch_size):
         5: 'Surprise',
         6: 'Neutral'
     }
-
-    #df_train = pd.concat([
-    #    df[df.Usage == 'Training'],
-    #    df[df.Usage == 'PublicTest']],
-    #    ignore_index = True).drop(['Usage'], axis=1)
 
     df_train  = df[
         df.Usage == 'Training'].drop([
@@ -112,3 +106,4 @@ def get_FEDdataset(batch_size):
     )
 
     return (train_loader, valid_loader, test_loader, classes)
+    
