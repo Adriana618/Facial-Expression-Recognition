@@ -4,7 +4,7 @@ from utils.import_module import charge_dynamic_class, charge_dynamic_function
 import logging
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read("config.ini")
 
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -12,7 +12,9 @@ DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = charge_dynamic_class(config["model"]["name"], config["model"]["model_file"])
 
 # dataset settings
-dataset = charge_dynamic_class(config["dataset"]["name"], config["dataset"]["dataset_file"])
+dataset = charge_dynamic_class(
+    config["dataset"]["name"], config["dataset"]["dataset_file"]
+)
 get_dataset = charge_dynamic_function("get_dataset", config["dataset"]["dataset_file"])
 
 # train settings

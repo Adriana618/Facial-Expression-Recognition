@@ -4,13 +4,15 @@ import glob
 import re
 import os
 
+
 def verify(module, module_path):
-    chs = glob.glob(os.path.join(module_path, '*.py'))
-    models = [re.search(r'\\(.+?).py', ch).group(1) for ch in chs]
+    chs = glob.glob(os.path.join(module_path, "*.py"))
+    models = [re.search(r"\\(.+?).py", ch).group(1) for ch in chs]
     if module["name"] not in models:
         logging.error("Model not found")
     else:
         logging.info("Model charged")
+
 
 def charge_dynamic_class(classname, path_to_module):
     try:
@@ -23,6 +25,7 @@ def charge_dynamic_class(classname, path_to_module):
     except AttributeError:
         logging.error("Class {} not found".format(classname))
 
+
 def charge_dynamic_class_old(classname, path_to_module, folder="models"):
     try:
         module = import_module("{}.{}".format(folder, path_to_module))
@@ -33,6 +36,7 @@ def charge_dynamic_class_old(classname, path_to_module, folder="models"):
         logging.error("File {} not found".format(path_to_module))
     except AttributeError:
         logging.error("Class {} not found".format(classname))
+
 
 def charge_dynamic_function(function, path_to_module):
     try:

@@ -1,10 +1,11 @@
-''' Fer2013 Dataset class'''
+""" Fer2013 Dataset class"""
 
 from __future__ import print_function
 from PIL import Image
 import numpy as np
 import h5py
 import torch.utils.data as data
+
 
 class FER2013(data.Dataset):
     """`FER2013 Dataset.
@@ -16,27 +17,27 @@ class FER2013(data.Dataset):
             and returns a transformed version. E.g, ``transforms.RandomCrop``
     """
 
-    def __init__(self, split='Training', transform=None):
+    def __init__(self, split="Training", transform=None):
         self.transform = transform
         self.split = split  # training set or test set
-        self.data = h5py.File('./data/fer2013.h5', 'r', driver='core')
+        self.data = h5py.File("./data/fer2013.h5", "r", driver="core")
         # now load the picked numpy arrays
         print("now load the picked numpy arrays")
-        if self.split == 'Training':
-            self.train_data = self.data['Training_pixel']
-            self.train_labels = self.data['Training_label']
+        if self.split == "Training":
+            self.train_data = self.data["Training_pixel"]
+            self.train_labels = self.data["Training_label"]
             self.train_data = np.asarray(self.train_data)
             self.train_data = self.train_data.reshape((28709, 48, 48))
 
-        elif self.split == 'PublicTest':
-            self.PublicTest_data = self.data['PublicTest_pixel']
-            self.PublicTest_labels = self.data['PublicTest_label']
+        elif self.split == "PublicTest":
+            self.PublicTest_data = self.data["PublicTest_pixel"]
+            self.PublicTest_labels = self.data["PublicTest_label"]
             self.PublicTest_data = np.asarray(self.PublicTest_data)
             self.PublicTest_data = self.PublicTest_data.reshape((3589, 48, 48))
 
         else:
-            self.PrivateTest_data = self.data['PrivateTest_pixel']
-            self.PrivateTest_labels = self.data['PrivateTest_label']
+            self.PrivateTest_data = self.data["PrivateTest_pixel"]
+            self.PrivateTest_labels = self.data["PrivateTest_label"]
             self.PrivateTest_data = np.asarray(self.PrivateTest_data)
             self.PrivateTest_data = self.PrivateTest_data.reshape((3589, 48, 48))
         print("Finalized process...")
@@ -49,9 +50,9 @@ class FER2013(data.Dataset):
         Returns:
             tuple: (image, target) where target is index of the target class.
         """
-        if self.split == 'Training':
+        if self.split == "Training":
             img, target = self.train_data[index], self.train_labels[index]
-        elif self.split == 'PublicTest':
+        elif self.split == "PublicTest":
             img, target = self.PublicTest_data[index], self.PublicTest_labels[index]
         else:
             img, target = self.PrivateTest_data[index], self.PrivateTest_labels[index]
@@ -66,9 +67,9 @@ class FER2013(data.Dataset):
         return img, target
 
     def __len__(self):
-        if self.split == 'Training':
+        if self.split == "Training":
             return len(self.train_data)
-        elif self.split == 'PublicTest':
+        elif self.split == "PublicTest":
             return len(self.PublicTest_data)
         else:
             return len(self.PrivateTest_data)

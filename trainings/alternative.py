@@ -1,7 +1,9 @@
 import torch
 import torch.nn.functional as F
 import numpy as np
+
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 
 def train_step(self, ep):
     """
@@ -25,6 +27,7 @@ def train_step(self, ep):
 
     return np.mean(loss_list)
 
+
 def valid_step(self):
     """
     Valid step: train the model with the whole valid data
@@ -35,19 +38,20 @@ def valid_step(self):
     self.net.eval()
 
     loss_it = []
-    acc_it  = []
+    acc_it = []
 
     for batch in self.valid_loader:
         batch_data, batch_labels = batch
-            
+
         outputs = self.net(batch_data.to(DEVICE))
         loss = compute_loss(outputs, batch_labels.to(DEVICE))
-        acc  = compute_accuracy(outputs, batch_labels.to(DEVICE))
+        acc = compute_accuracy(outputs, batch_labels.to(DEVICE))
 
         loss_it.append(loss.item())
         acc_it.append(acc.item())
-        
+
     return np.mean(loss_it), np.mean(acc_it)
+
 
 def optimize_step(self, inputs, labels):
     """
@@ -59,10 +63,11 @@ def optimize_step(self, inputs, labels):
     """
     outputs = self.net(inputs)
     self.loss = compute_loss(outputs, labels)
-        
+
     self.opt.zero_grad()
     self.loss.backward()
     self.opt.step()
+
 
 def compute_loss(outputs, labels):
     """
@@ -73,9 +78,10 @@ def compute_loss(outputs, labels):
         labels : a tensor that contains the batch of labels
     """
     loss = F.cross_entropy(outputs, labels)
-    #loss = cross_entropy(outputs, labels)
-        
+    # loss = cross_entropy(outputs, labels)
+
     return loss
+
 
 def compute_accuracy(outputs, labels):
     """
@@ -86,4 +92,4 @@ def compute_accuracy(outputs, labels):
         labels : a tensor that contains the batch of labels
     """
     _, preds = torch.max(outputs, dim=1)
-    return torch.tensor(torch.sum(preds==labels).item()/len(preds))
+    return torch.tensor(torch.sum(preds == labels).item() / len(preds))

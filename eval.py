@@ -15,13 +15,10 @@ import matplotlib.pyplot as plt
 from torchvision.utils import make_grid
 import torch.nn.functional as F
 
-class Eval():
+
+class Eval:
     def __init__(
-        self, 
-        batch_size = 64, 
-        input_dim  = 1,
-        hid_dim    = 64, 
-        c_num      = 7,
+        self, batch_size=64, input_dim=1, hid_dim=64, c_num=7,
     ):
 
         self.net = settings.model(input_dim, hid_dim, c_num)
@@ -33,30 +30,30 @@ class Eval():
         self.test_loader = test_loader
         self.classes = classes
         self.checkpoints_path = settings.checkpoints_path
-    
-    def step(self):
-        chs = glob.glob(os.path.join(self.checkpoints_path, '*.pth'))
 
-        assert (len(chs) != 0)
-        
-        eps = [int(re.search('model-(.+?).pth', ch).group(1)) for ch in chs]
+    def step(self):
+        chs = glob.glob(os.path.join(self.checkpoints_path, "*.pth"))
+
+        assert len(chs) != 0
+
+        eps = [int(re.search("model-(.+?).pth", ch).group(1)) for ch in chs]
         self.load(sorted(eps)[-1])
         self.eval_step()
-    
+
     def eval_step(self):
         self.net.eval()
 
         loss_it = []
-        acc_it  = []
+        acc_it = []
 
         y_pred = []
         y_true = []
 
         for batch in self.test_loader:
             batch_data, batch_labels = batch
-            
-            outputs  = self.net(batch_data.to(settings.DEVICE))
-            
+
+            outputs = self.net(batch_data.to(settings.DEVICE))
+
             accuracy = self.accuracy(outputs, batch_labels.to(settings.DEVICE))
 
             if settings.confussion_matrix:
@@ -66,27 +63,31 @@ class Eval():
             acc_it.append(accuracy.item())
         if settings.confussion_matrix:
             cf_matrix = confusion_matrix(y_true, y_pred)
-            #print(cf_matrix)
-            df_cm = pd.DataFrame(cf_matrix/np.sum(cf_matrix) *100, index = [i for _,i in self.classes.items()],
-                        columns = [i for _,i in self.classes.items()])
-            plt.figure(figsize = (12,7))
+            # print(cf_matrix)
+            df_cm = pd.DataFrame(
+                cf_matrix / np.sum(cf_matrix) * 100,
+                index=[i for _, i in self.classes.items()],
+                columns=[i for _, i in self.classes.items()],
+            )
+            plt.figure(figsize=(12, 7))
             sn.heatmap(df_cm, annot=True)
-            plt.savefig('output.png')
+            plt.savefig("output.png")
         print(self.ep_eval_str.format(np.mean(acc_it)))
 
     def accuracy(self, outputs, labels):
         _, preds = torch.max(outputs, dim=1)
-        return torch.tensor(torch.sum(preds==labels).item()/len(preds))
+        return torch.tensor(torch.sum(preds == labels).item() / len(preds))
 
     def load(self, ep):
-        print('Model Loaded at epoch ...{}'.format(ep), end='')
-        file_model = 'model-{:d}.pth'.format(ep)
+        print("Model Loaded at epoch ...{}".format(ep), end="")
+        file_model = "model-{:d}.pth".format(ep)
 
-        load_path  = os.path.join(self.checkpoints_path, file_model)
+        load_path = os.path.join(self.checkpoints_path, file_model)
         checkpoint = torch.load(load_path)
 
-        self.net.load_state_dict(checkpoint['model_sd'])
+        self.net.load_state_dict(checkpoint["model_sd"])
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     eval = Eval()
     eval.step()
