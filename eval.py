@@ -71,7 +71,7 @@ class Eval:
             )
             plt.figure(figsize=(12, 7))
             sn.heatmap(df_cm, annot=True)
-            plt.savefig("output.png")
+            plt.savefig("confussion_matrix_{}-{}.png".format(settings.model_name, settings.dataset))
         print(self.ep_eval_str.format(np.mean(acc_it)))
 
     def accuracy(self, outputs, labels):

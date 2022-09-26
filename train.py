@@ -78,7 +78,7 @@ class Trainer:
         if len(chs) == 0:
             ep_start = 1
         else:
-            eps = [int(re.search("model-(.+?).pth", ch).group(1)) for ch in chs]
+            eps = [int(re.search("model-(.+?)-{}-{}.pth".format(settings.model_name, settings.dataset), ch).group(1)) for ch in chs]
             ep_start = sorted(eps)[-1]
             self.load(ep_start)
             ep_start += 1
@@ -109,21 +109,8 @@ class Trainer:
             # Saving every "self.save_step"
             if ep % self.save_step == 0:
                 self.save(ep)
-
-        plt.plot(train_loss_history)
-        plt.plot(valid_loss_history)
-        plt.title("model loss")
-        plt.ylabel("loss")
-        plt.xlabel("epoch")
-        plt.legend(["train", "val"], loc="upper left")
-        plt.savefig("model_loss.png")
-        plt.clf()
-        plt.plot(valid_accu_history)
-        plt.title("model accuracy")
-        plt.ylabel("accuracy")
-        plt.xlabel("epoch")
-        plt.legend(["val"], loc="upper left")
-        plt.savefig("model_accuracy.png")
+        self.save_graphic(title="model loss",xlabel="epoch",ylabel="loss",series=[train_loss_history,valid_loss_history], legend=["train","val"])
+        self.save_graphic(title="model accuracy",xlabel="epoch",ylabel="accuracy",series=[valid_accu_history], legend=["val"])
 
     def save(self, ep):
         """
@@ -133,9 +120,9 @@ class Trainer:
             ep: epoch
         """
 
-        print("Model saved at epoch {:d}... ".format(ep), end="")
+        print("Model saved at epoch {:d}... ".format(ep))
 
-        file_model = "model-{:d}.pth".format(ep)
+        file_model = "model-{:d}-{}-{}.pth".format(ep, settings.model_name, settings.dataset)
 
         if not os.path.exists(self.checkpoints_path):
             os.makedirs(self.checkpoints_path)
@@ -148,6 +135,16 @@ class Trainer:
         checkpoint["optimizer_sd"] = self.opt.state_dict()
 
         torch.save(checkpoint, save_path)
+    
+    def save_graphic(self, title, xlabel, ylabel, series, legend):
+        for serie in series:
+            plt.plot(serie)
+        plt.title(title)
+        plt.ylabel(xlabel)
+        plt.xlabel(ylabel)
+        plt.legend(legend, loc="upper left")
+        plt.savefig("{}_{}_{}.png".format(title, settings.model_name, settings.dataset))
+        plt.clf()
 
     def load(self, ep):
         """
@@ -156,8 +153,8 @@ class Trainer:
         Params:
             ep: epoch
         """
-        print("Model Loaded at epoch ...".format(ep), end="")
-        file_model = "model-{:d}.pth".format(ep)
+        print("Model Loaded at epoch ...".format(ep))
+        file_model = "model-{:d}-{}-{}.pth".format(ep, settings.model_name, settings.dataset)
 
         load_path = os.path.join(self.checkpoints_path, file_model)
         checkpoint = torch.load(load_path)

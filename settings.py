@@ -10,6 +10,7 @@ DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # model settings
 model = charge_dynamic_class(config["model"]["name"], config["model"]["model_file"])
+model_name = config["model"]["name"]
 
 # dataset settings
 dataset = charge_dynamic_class(
